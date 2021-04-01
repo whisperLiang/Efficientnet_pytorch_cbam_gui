@@ -1,0 +1,4 @@
+torch==1.4.0
+torchvision==0.5.0
+torch_optimizer==0.0.1a9
+prefetch_generator==1.0.1
