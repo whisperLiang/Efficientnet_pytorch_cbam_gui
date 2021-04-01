@@ -24,16 +24,16 @@
 
 第二阶段训练，图像输入尺寸为465，适当调整随机裁切和随机擦除的参数，增加weight_decay，在第一阶段模型的基础上训练获得5个模型快照，选择val_acc最高的模型，作为第二阶段的训练结果。
 
-运行指令为 !python train1.py --batch_size=10 --lr=5e-5 --image_size=456\
+运行指令为 !python train.py --batch_size=10 --lr=5e-5 --image_size=456\
 
  --weight_decay=1e-4 --resize_scale=0.6 --erasing_prob=0.3 \
 
- --epochs=50 --num_class=10 --model_path='checkpoint/best_model_456.pth'
+ --epochs=100 --num_class=20 --model_path='checkpoint/best_model_456.pth'
 
 第三阶段训练，图像输入尺寸为465，关闭cutmix，损失函数采用CrossEntropyLoss，在第二阶段模型的基础上训练获得5个模型快照，选择val_acc最高的模型，作为最终的训练结果。
 
-运行指令为 !python train1.py --batch_size=10 --lr=1e-6 --image_size=456\
+运行指令为 !python train.py --batch_size=10 --lr=1e-6 --image_size=456\
 
  --weight_decay=1e-4 --resize_scale=0.6 --erasing_prob=0.3 --cutmix\
 
- --label_smooth --epochs=50 --num_class=10 --model_path='checkpoint/best_model_456.pth'
+ --label_smooth --epochs=100 --num_class=20 --model_path='checkpoint/best_model_456.pth'
