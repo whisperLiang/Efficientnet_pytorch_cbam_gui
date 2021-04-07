@@ -30,7 +30,6 @@ class Original_b5(nn.Module):
         out = self.fc(out)
         return out
 
-#尝试过将b5和b2的feature map拼接后，加入注意力机制。效果不是很好        
 class Net_multi_model(nn.Module):
     def __init__(self):
         super(Net_multi_model, self).__init__()
