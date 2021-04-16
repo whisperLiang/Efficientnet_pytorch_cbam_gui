@@ -250,13 +250,9 @@ for fold_idx, (train_idx, val_idx) in enumerate(skf.split(train_df['FileID'], tr
         #     tf.summary.scalar('train_loss_T', train_loss, step=epoch)
         #     tf.summary.scalar('train_acc_T', train_acc, step=epoch)
         val_acc, val_loss = validate(val_loader, model, criterion)
-
-
-        with summary_writer.as_default():
-             tf.summary.scalar('val_loss_T', val_loss, step=epoch)
-             tf.summary.scalar('val_acc_T', val_acc, step=epoch)
-
-
+#         with summary_writer.as_default():
+#              tf.summary.scalar('val_loss_T', val_loss, step=epoch)
+#              tf.summary.scalar('val_acc_T', val_acc, step=epoch)
         save_checkpoint(metrics, val_loss, val_acc, model, current_snapshot, fold_idx)
         snapshots_losses[current_snapshot][0] = metrics['best_acc']
         snapshots_losses[current_snapshot][1] = metrics['best_acc_loss']
