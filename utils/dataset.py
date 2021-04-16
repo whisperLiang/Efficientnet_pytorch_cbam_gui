@@ -1,7 +1,7 @@
 import torch
 from torchvision import datasets, models, transforms
 from torch.utils.data.dataset import Dataset
-# from prefetch_generator import BackgroundGenerator
+from prefetch_generator import BackgroundGenerator
 from PIL import Image
 
 #Dataset需要传入所有图像的路径以及对应的label
