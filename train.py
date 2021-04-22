@@ -20,7 +20,7 @@ import torch_optimizer as newoptim
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-print("2")
+
 
 def validate(val_loader, model, criterion):
     batch_time = tools.AverageMeter('Time', ':6.3f')
@@ -150,11 +150,11 @@ using_cutmix = True if args.train_args.cutmix == 'True' else False			#是否开�
 using_label_smooth = True if args.train_args.label_smooth == 'True' else False		#是否开启labelsmooth
 model_path = args.train_args.model_path			#前一阶段训练得到的模型路径
 classes = args.train_args.num_class        #需要识别的图像种类
-log_path = args.train_args.log_path # 日志存储路径
-summary_writer = tf.summary.create_file_writer(log_path)
+# log_path = args.train_args.log_path # 日志存储路径
+# summary_writer = tf.summary.create_file_writer(log_path)
 
 if using_label_smooth == True:
-	criterion = loss.CrossEntropyLabelSmooth(10, epsilon=0.1)
+	criterion = loss.CrossEntropyLabelSmooth(classes, epsilon=0.1)
 else:
 	criterion = nn.CrossEntropyLoss()
 	
