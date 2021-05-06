@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QDateTime, QThread
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QPixmap, QPalette
 from SaveGesture import *
-from test_one import test_model
+from test_onegui import test_model
 from Frame import *
 import torch
 print(torch.__version__)
@@ -25,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 global gesture_action
 class_num = 10
 use_gpu = torch.cuda.is_available()
+
 
 class MyMainWindow(QMainWindow,Ui_MainWindow):
     def __init__(self, parent=None):
@@ -91,8 +92,7 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
     def Help(self):
         QMessageBox.information(self, "操作提示框", "获取手势：通过OpenCV和摄像头获取一张即时照片。\n"
-                                "判断手势：通过之前训练好的参数和卷积神经网络判断手势。\n"
-                                "执行手势：根据识别的手势姿态控制机械手作业。")
+                                "判断手势：通过之前训练好的参数和卷积神经网络判断手势。\n")
 
     def result_show(self,gesture_num):
         # self.LitResultlabel.setText(f"判断结果：该手势数字为:{gesture_num[0]},其识别正确率为:{gesture_num[1]}")
