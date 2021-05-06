@@ -37,3 +37,8 @@
  --weight_decay=1e-4 --resize_scale=0.6 --erasing_prob=0.3 --cutmix\
 
  --label_smooth --epochs=100 --num_class=20 --model_path='checkpoint/best_model_456.pth'
+ 
+ ## 
+ 
+ # 博客地址
+ https://blog.csdn.net/Whisper_lg/article/details/115655675
