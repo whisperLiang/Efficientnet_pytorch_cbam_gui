@@ -192,10 +192,15 @@ for fold_idx, (train_idx, val_idx) in enumerate(skf.split(train_df['FileID'], tr
                                 batch_size=train_batch_size, 
                                 shuffle=False, 
                                 pin_memory=True)
+    
     # 导入融合cbam的Efficientnet模型
     model = mymodel.Net_b5(num_class=classes)
+
     # # 导入原始的Efficientnet模型
     # model = mymodel.Original_b5(num_class=classes)
+
+    # # 导入b3和b6并融合cbam的模型
+    # model = mymodel.Net_multi_model(num_class=classes)
 
     if model_path:
         model.load_state_dict(torch.load(model_path))
