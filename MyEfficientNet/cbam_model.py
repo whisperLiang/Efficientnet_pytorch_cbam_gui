@@ -15,6 +15,7 @@ from .utils import (
     MemoryEfficientSwish,
 )
 
+# SGE module
 class SpatialGroupEnhance(nn.Module):
     def __init__(self, groups = 64):
         super(SpatialGroupEnhance, self).__init__()
@@ -26,7 +27,7 @@ class SpatialGroupEnhance(nn.Module):
 
     def forward(self, x): # (b, c, h, w)
         b, c, h, w = x.size()
-        x = x.view(b * self.groups, -1, h, w) 
+        x = x.view(b * self.groups, -1, h, w)
         xn = x * self.avg_pool(x)
         xn = xn.sum(dim=1, keepdim=True)
         t = xn.view(b * self.groups, -1)
@@ -40,86 +41,86 @@ class SpatialGroupEnhance(nn.Module):
         x = x.view(b, c, h, w)
         return x
         
-class ContextBlock(nn.Module):
-    def __init__(self,inplanes,ratio,pooling_type='att',
-                 fusion_types=('channel_add', )):
-        super(ContextBlock, self).__init__()
-        valid_fusion_types = ['channel_add', 'channel_mul']
+# class ContextBlock(nn.Module):
+#     def __init__(self,inplanes,ratio,pooling_type='att',
+#                  fusion_types=('channel_add', )):
+#         super(ContextBlock, self).__init__()
+#         valid_fusion_types = ['channel_add', 'channel_mul']
+#
+#         assert pooling_type in ['avg', 'att']
+#         assert isinstance(fusion_types, (list, tuple))
+#         assert all([f in valid_fusion_types for f in fusion_types])
+#         assert len(fusion_types) > 0, 'at least one fusion should be used'
+#
+#         self.inplanes = inplanes
+#         self.ratio = ratio
+#         self.planes = int(inplanes * ratio)
+#         self.pooling_type = pooling_type
+#         self.fusion_types = fusion_types
+#
+#         if pooling_type == 'att':
+#             self.conv_mask = nn.Conv2d(inplanes, 1, kernel_size=1)
+#             self.softmax = nn.Softmax(dim=2)
+#         else:
+#             self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         if 'channel_add' in fusion_types:
+#             self.channel_add_conv = nn.Sequential(
+#                 nn.Conv2d(self.inplanes, self.planes, kernel_size=1),
+#                 nn.LayerNorm([self.planes, 1, 1]),
+#                 nn.ReLU(inplace=True),  # yapf: disable
+#                 nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
+#         else:
+#             self.channel_add_conv = None
+#         if 'channel_mul' in fusion_types:
+#             self.channel_mul_conv = nn.Sequential(
+#                 nn.Conv2d(self.inplanes, self.planes, kernel_size=1),
+#                 nn.LayerNorm([self.planes, 1, 1]),
+#                 nn.ReLU(inplace=True),  # yapf: disable
+#                 nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
+#         else:
+#             self.channel_mul_conv = None
+#
+#
+#     def spatial_pool(self, x):
+#         batch, channel, height, width = x.size()
+#         if self.pooling_type == 'att':
+#             input_x = x
+#             # [N, C, H * W]
+#             input_x = input_x.view(batch, channel, height * width)
+#             # [N, 1, C, H * W]
+#             input_x = input_x.unsqueeze(1)
+#             # [N, 1, H, W]
+#             context_mask = self.conv_mask(x)
+#             # [N, 1, H * W]
+#             context_mask = context_mask.view(batch, 1, height * width)
+#             # [N, 1, H * W]
+#             context_mask = self.softmax(context_mask)
+#             # [N, 1, H * W, 1]
+#             context_mask = context_mask.unsqueeze(-1)
+#             # [N, 1, C, 1]
+#             context = torch.matmul(input_x, context_mask)
+#             # [N, C, 1, 1]
+#             context = context.view(batch, channel, 1, 1)
+#         else:
+#             # [N, C, 1, 1]
+#             context = self.avg_pool(x)
+#         return context
+#
+#     def forward(self, x):
+#         # [N, C, 1, 1]
+#         context = self.spatial_pool(x)
+#         out = x
+#         if self.channel_mul_conv is not None:
+#             # [N, C, 1, 1]
+#             channel_mul_term = torch.sigmoid(self.channel_mul_conv(context))
+#             out = out * channel_mul_term
+#         if self.channel_add_conv is not None:
+#             # [N, C, 1, 1]
+#             channel_add_term = self.channel_add_conv(context)
+#             out = out + channel_add_term
+#         return out
 
-        assert pooling_type in ['avg', 'att']
-        assert isinstance(fusion_types, (list, tuple))
-        assert all([f in valid_fusion_types for f in fusion_types])
-        assert len(fusion_types) > 0, 'at least one fusion should be used'
-
-        self.inplanes = inplanes
-        self.ratio = ratio
-        self.planes = int(inplanes * ratio)
-        self.pooling_type = pooling_type
-        self.fusion_types = fusion_types
-
-        if pooling_type == 'att':
-            self.conv_mask = nn.Conv2d(inplanes, 1, kernel_size=1)
-            self.softmax = nn.Softmax(dim=2)
-        else:
-            self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        if 'channel_add' in fusion_types:
-            self.channel_add_conv = nn.Sequential(
-                nn.Conv2d(self.inplanes, self.planes, kernel_size=1),
-                nn.LayerNorm([self.planes, 1, 1]),
-                nn.ReLU(inplace=True),  # yapf: disable
-                nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
-        else:
-            self.channel_add_conv = None
-        if 'channel_mul' in fusion_types:
-            self.channel_mul_conv = nn.Sequential(
-                nn.Conv2d(self.inplanes, self.planes, kernel_size=1),
-                nn.LayerNorm([self.planes, 1, 1]),
-                nn.ReLU(inplace=True),  # yapf: disable
-                nn.Conv2d(self.planes, self.inplanes, kernel_size=1))
-        else:
-            self.channel_mul_conv = None
-
-
-    def spatial_pool(self, x):
-        batch, channel, height, width = x.size()
-        if self.pooling_type == 'att':
-            input_x = x
-            # [N, C, H * W]
-            input_x = input_x.view(batch, channel, height * width)
-            # [N, 1, C, H * W]
-            input_x = input_x.unsqueeze(1)
-            # [N, 1, H, W]
-            context_mask = self.conv_mask(x)
-            # [N, 1, H * W]
-            context_mask = context_mask.view(batch, 1, height * width)
-            # [N, 1, H * W]
-            context_mask = self.softmax(context_mask)
-            # [N, 1, H * W, 1]
-            context_mask = context_mask.unsqueeze(-1)
-            # [N, 1, C, 1]
-            context = torch.matmul(input_x, context_mask)
-            # [N, C, 1, 1]
-            context = context.view(batch, channel, 1, 1)
-        else:
-            # [N, C, 1, 1]
-            context = self.avg_pool(x)
-        return context
-
-    def forward(self, x):
-        # [N, C, 1, 1]
-        context = self.spatial_pool(x)
-        out = x
-        if self.channel_mul_conv is not None:
-            # [N, C, 1, 1]
-            channel_mul_term = torch.sigmoid(self.channel_mul_conv(context))
-            out = out * channel_mul_term
-        if self.channel_add_conv is not None:
-            # [N, C, 1, 1]
-            channel_add_term = self.channel_add_conv(context)
-            out = out + channel_add_term
-        return out
-
-
+# 通道注意力模块
 class ChannelAttention(nn.Module):
     def __init__(self, in_planes, ratio=16):
         super(ChannelAttention, self).__init__()
@@ -137,7 +138,7 @@ class ChannelAttention(nn.Module):
         max_out = self.fc2(self.relu1(self.fc1(self.max_pool(x))))
         out = avg_out + max_out
         return self.sigmoid(out)
-        
+# 空间注意力模块
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size=7):
         super(SpatialAttention, self).__init__()
@@ -239,7 +240,7 @@ class MBConvBlock(nn.Module):
         """Sets swish function as memory efficient (for training) or standard (for export)"""
         self._swish = MemoryEfficientSwish() if memory_efficient else Swish()
 
-
+# cbam融入EffcientNet
 class cbam_EfficientNet(nn.Module):
     """
     An EfficientNet model. Most easily loaded with the .from_name or .from_pretrained methods
@@ -385,27 +386,15 @@ class cbam_EfficientNet(nn.Module):
         if model_name not in valid_models:
             raise ValueError('model_name should be one of: ' + ', '.join(valid_models))
 
-
+# 原始Efficientnet
 class EfficientNet(nn.Module):
-    """EfficientNet model.
-       Most easily loaded with the .from_name or .from_pretrained methods.
-
+    """
+    An EfficientNet model. Most easily loaded with the .from_name or .from_pretrained methods
     Args:
-        blocks_args (list[namedtuple]): A list of BlockArgs to construct blocks.
-        global_params (namedtuple): A set of GlobalParams shared between blocks.
-
-    References:
-        [1] https://arxiv.org/abs/1905.11946 (EfficientNet)
-
+        blocks_args (list): A list of BlockArgs to construct blocks
+        global_params (namedtuple): A set of GlobalParams shared between blocks
     Example:
-
-
-        import torch
-        >>> from efficientnet.model import EfficientNet
-        >>> inputs = torch.rand(1, 3, 224, 224)
-        >>> model = EfficientNet.from_pretrained('efficientnet-b0')
-        >>> model.eval()
-        >>> outputs = model(inputs)
+        model = EfficientNet.from_pretrained('efficientnet-b0')
     """
 
     def __init__(self, blocks_args=None, global_params=None):
@@ -415,20 +404,18 @@ class EfficientNet(nn.Module):
         self._global_params = global_params
         self._blocks_args = blocks_args
 
+        # Get static or dynamic convolution depending on image size
+        Conv2d = get_same_padding_conv2d(image_size=global_params.image_size)
+
         # Batch norm parameters
         bn_mom = 1 - self._global_params.batch_norm_momentum
         bn_eps = self._global_params.batch_norm_epsilon
-
-        # Get stem static or dynamic convolution depending on image size
-        image_size = global_params.image_size
-        Conv2d = get_same_padding_conv2d(image_size=image_size)
 
         # Stem
         in_channels = 3  # rgb
         out_channels = round_filters(32, self._global_params)  # number of output channels
         self._conv_stem = Conv2d(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
         self._bn0 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
-        image_size = calculate_output_image_size(image_size, 2)
 
         # Build blocks
         self._blocks = nn.ModuleList([])
@@ -442,18 +429,15 @@ class EfficientNet(nn.Module):
             )
 
             # The first block needs to take care of stride and filter size increase.
-            self._blocks.append(MBConvBlock(block_args, self._global_params, image_size=image_size))
-            image_size = calculate_output_image_size(image_size, block_args.stride)
-            if block_args.num_repeat > 1:  # modify block_args to keep same output size
+            self._blocks.append(MBConvBlock(block_args, self._global_params))
+            if block_args.num_repeat > 1:
                 block_args = block_args._replace(input_filters=block_args.output_filters, stride=1)
             for _ in range(block_args.num_repeat - 1):
-                self._blocks.append(MBConvBlock(block_args, self._global_params, image_size=image_size))
-                # image_size = calculate_output_image_size(image_size, block_args.stride)  # stride = 1
+                self._blocks.append(MBConvBlock(block_args, self._global_params))
 
         # Head
         in_channels = block_args.output_filters  # output of final block
         out_channels = round_filters(1280, self._global_params)
-        Conv2d = get_same_padding_conv2d(image_size=image_size)
         self._conv_head = Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
         self._bn1 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
 
@@ -464,70 +448,14 @@ class EfficientNet(nn.Module):
         self._swish = MemoryEfficientSwish()
 
     def set_swish(self, memory_efficient=True):
-        """Sets swish function as memory efficient (for training) or standard (for export).
-
-        Args:
-            memory_efficient (bool): Whether to use memory-efficient version of swish.
-
-        """
+        """Sets swish function as memory efficient (for training) or standard (for export)"""
         self._swish = MemoryEfficientSwish() if memory_efficient else Swish()
         for block in self._blocks:
             block.set_swish(memory_efficient)
 
-    def extract_endpoints(self, inputs):
-        """Use convolution layer to extract features
-        from reduction levels i in [1, 2, 3, 4, 5].
-
-        Args:
-            inputs (tensor): Input tensor.
-
-        Returns:
-            Dictionary of last intermediate features
-            with reduction levels i in [1, 2, 3, 4, 5].
-            Example:
-                >>> import torch
-                >>> from efficientnet.model import EfficientNet
-                >>> inputs = torch.rand(1, 3, 224, 224)
-                >>> model = EfficientNet.from_pretrained('efficientnet-b0')
-                >>> endpoints = model.extract_endpoints(inputs)
-                >>> print(endpoints['reduction_1'].shape)  # torch.Size([1, 16, 112, 112])
-                >>> print(endpoints['reduction_2'].shape)  # torch.Size([1, 24, 56, 56])
-                >>> print(endpoints['reduction_3'].shape)  # torch.Size([1, 40, 28, 28])
-                >>> print(endpoints['reduction_4'].shape)  # torch.Size([1, 112, 14, 14])
-                >>> print(endpoints['reduction_5'].shape)  # torch.Size([1, 1280, 7, 7])
-        """
-        endpoints = dict()
-
-        # Stem
-        x = self._swish(self._bn0(self._conv_stem(inputs)))
-        prev_x = x
-
-        # Blocks
-        for idx, block in enumerate(self._blocks):
-            drop_connect_rate = self._global_params.drop_connect_rate
-            if drop_connect_rate:
-                drop_connect_rate *= float(idx) / len(self._blocks)  # scale drop connect_rate
-            x = block(x, drop_connect_rate=drop_connect_rate)
-            if prev_x.size(2) > x.size(2):
-                endpoints['reduction_{}'.format(len(endpoints) + 1)] = prev_x
-            prev_x = x
-
-        # Head
-        x = self._swish(self._bn1(self._conv_head(x)))
-        endpoints['reduction_{}'.format(len(endpoints) + 1)] = x
-
-        return endpoints
-
     def extract_features(self, inputs):
-        """use convolution layer to extract feature .
+        """ Returns output of the final convolution layer """
 
-        Args:
-            inputs (tensor): Input tensor.
-
-        Returns:
-            Output of the final convolution
-            layer in the efficientnet model.
-        """
         # Stem
         x = self._swish(self._bn0(self._conv_stem(inputs)))
 
@@ -535,7 +463,7 @@ class EfficientNet(nn.Module):
         for idx, block in enumerate(self._blocks):
             drop_connect_rate = self._global_params.drop_connect_rate
             if drop_connect_rate:
-                drop_connect_rate *= float(idx) / len(self._blocks)  # scale drop connect_rate
+                drop_connect_rate *= float(idx) / len(self._blocks)
             x = block(x, drop_connect_rate=drop_connect_rate)
 
         # Head
@@ -544,95 +472,36 @@ class EfficientNet(nn.Module):
         return x
 
     def forward(self, inputs):
-        """EfficientNet's forward function.
-           Calls extract_features to extract features, applies final linear layer, and returns logits.
-
-        Args:
-            inputs (tensor): Input tensor.
-
-        Returns:
-            Output of this model after processing.
-        """
+        """ Calls extract_features to extract features, applies final linear layer, and returns logits. """
+        bs = inputs.size(0)
         # Convolution layers
         x = self.extract_features(inputs)
+
         # Pooling and final linear layer
         x = self._avg_pooling(x)
-        if self._global_params.include_top:
-            x = x.flatten(start_dim=1)
-            x = self._dropout(x)
-            x = self._fc(x)
+        x = x.view(bs, -1)
+        x = self._dropout(x)
+        # x = self._fc(x)
         return x
 
     @classmethod
-    def from_name(cls, model_name, in_channels=3, **override_params):
-        """create an efficientnet model according to name.
-
-        Args:
-            model_name (str): Name for efficientnet.
-            in_channels (int): Input data's channel number.
-            override_params (other key word params):
-                Params to override model's global_params.
-                Optional key:
-                    'width_coefficient', 'depth_coefficient',
-                    'image_size', 'dropout_rate',
-                    'num_classes', 'batch_norm_momentum',
-                    'batch_norm_epsilon', 'drop_connect_rate',
-                    'depth_divisor', 'min_depth'
-
-        Returns:
-            An efficientnet model.
-        """
+    def from_name(cls, model_name, override_params=None):
         cls._check_model_name_is_valid(model_name)
         blocks_args, global_params = get_model_params(model_name, override_params)
-        model = cls(blocks_args, global_params)
-        model._change_in_channels(in_channels)
-        return model
+        return cls(blocks_args, global_params)
 
     @classmethod
-    def from_pretrained(cls, model_name, weights_path=None, advprop=False,
-                        in_channels=3, num_classes=1000, **override_params):
-        """create an efficientnet model according to name.
-
-        Args:
-            model_name (str): Name for efficientnet.
-            weights_path (None or str):
-                str: path to pretrained weights file on the local disk.
-                None: use pretrained weights downloaded from the Internet.
-            advprop (bool):
-                Whether to load pretrained weights
-                trained with advprop (valid when weights_path is None).
-            in_channels (int): Input data's channel number.
-            num_classes (int):
-                Number of categories for classification.
-                It controls the output size for final linear layer.
-            override_params (other key word params):
-                Params to override model's global_params.
-                Optional key:
-                    'width_coefficient', 'depth_coefficient',
-                    'image_size', 'dropout_rate',
-                    'batch_norm_momentum',
-                    'batch_norm_epsilon', 'drop_connect_rate',
-                    'depth_divisor', 'min_depth'
-
-        Returns:
-            A pretrained efficientnet model.
-        """
-        model = cls.from_name(model_name, num_classes=num_classes, **override_params)
-        load_pretrained_weights(model, model_name, weights_path=weights_path, load_fc=(num_classes == 1000),
-                                advprop=advprop)
-        model._change_in_channels(in_channels)
+    def from_pretrained(cls, model_name, advprop=False, num_classes=1000, in_channels=3):
+        model = cls.from_name(model_name, override_params={'num_classes': num_classes})
+        load_pretrained_weights(model, model_name, load_fc=(num_classes == 1000), advprop=advprop)
+        if in_channels != 3:
+            Conv2d = get_same_padding_conv2d(image_size=model._global_params.image_size)
+            out_channels = round_filters(32, model._global_params)
+            model._conv_stem = Conv2d(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
         return model
 
     @classmethod
     def get_image_size(cls, model_name):
-        """Get the input image size for a given efficientnet model.
-
-        Args:
-            model_name (str): Name for efficientnet.
-
-        Returns:
-            Input image size (resolution).
-        """
         cls._check_model_name_is_valid(model_name)
         _, _, res, _ = efficientnet_params(model_name)
         return res
@@ -640,18 +509,8 @@ class EfficientNet(nn.Module):
     @classmethod
     def _check_model_name_is_valid(cls, model_name):
         """ Validates model name. """
-        valid_models = ['efficientnet-b'+str(i) for i in range(9)]
+        valid_models = ['efficientnet-b' + str(i) for i in range(9)]
         if model_name not in valid_models:
             raise ValueError('model_name should be one of: ' + ', '.join(valid_models))
 
-    def _change_in_channels(self, in_channels):
-        """Adjust model's first convolution layer to in_channels, if in_channels not equals 3.
-
-        Args:
-            in_channels (int): Input data's channel number.
-        """
-        if in_channels != 3:
-            Conv2d = get_same_padding_conv2d(image_size=self._global_params.image_size)
-            out_channels = round_filters(32, self._global_params)
-            self._conv_stem = Conv2d(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
 
