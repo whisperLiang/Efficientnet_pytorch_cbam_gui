@@ -37,18 +37,19 @@ class Original_b5(nn.Module):
 
 # 多尺度融合模型b3 and b6
 class Net_multi_model(nn.Module):
-    def __init__(self):
+    def __init__(self, num_class):
         super(Net_multi_model, self).__init__()
         
         self.model1 = cbam_EfficientNet.from_pretrained('efficientnet-b6', num_classes=1000)
         self.model2 = cbam_EfficientNet.from_pretrained('efficientnet-b3', num_classes=1000)
+        self.num_class = num_class
         num_ftrs = self.model1._fc.in_features + self.model2._fc.in_features
         # self.dropout = nn.Dropout(0.5)
         self.attention = nn.Sequential(nn.Linear(num_ftrs, num_ftrs//16),
                                 nn.ReLU(),
                                 nn.Linear(num_ftrs//16, num_ftrs),
                                 nn.Sigmoid())
-        self.fc = nn.Linear(num_ftrs, 10)
+        self.fc = nn.Linear(num_ftrs, self.num_class)
 
 
     def forward(self, img):
