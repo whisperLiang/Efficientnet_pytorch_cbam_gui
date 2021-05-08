@@ -14,7 +14,7 @@ class Net_b5(nn.Module):
         # self.model = EfficientNet.from_pretrained('efficientnet-b5', num_class=1000)
         self.num_class = num_class
         num_ftrs = self.model._fc.in_features
-        self.fc = nn.Linear(num_ftrs,num_class)
+        self.fc = nn.Linear(num_ftrs,self.num_class)
 
     def forward(self, img):
         out = self.model(img)
@@ -28,7 +28,7 @@ class Original_b5(nn.Module):
         self.model = EfficientNet.from_pretrained('efficientnet-b5', num_classes=1000)
         self.num_class = num_class
         num_ftrs = self.model._fc.in_features
-        self.fc = nn.Linear(num_ftrs,num_class)
+        self.fc = nn.Linear(num_ftrs,self.num_class)
 
     def forward(self, img):
         out = self.model(img)
